@@ -10,11 +10,11 @@ permalink: https://perma.cc/C9ZM-652R
 """
 
 import math
-import gym
-from gym import spaces, logger
-from gym.utils import seeding
+import gymnasium as gym
+from gymnasium import spaces, logger
+from gymnasium.utils import seeding
 import numpy as np
-import csv
+import pygame
 
 class CartPoleEnv_adv(gym.Env):
     """
@@ -59,7 +59,13 @@ class CartPoleEnv_adv(gym.Env):
         'video.frames_per_second': 50
     }
 
-    def __init__(self):
+    def __init__(self, render_mode=None):
+        super().__init__()
+
+        # Other initialization
+        self.render_mode = render_mode  # Add this line to handle render_mode
+        self.viewer = None
+
         self.gravity = 10
         # 1 0.1 0.5 original
         self.masscart = 1
@@ -93,8 +99,21 @@ class CartPoleEnv_adv(gym.Env):
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
         self.seed()
-        self.viewer = None
         self.state = None
+
+        self.screen_width = 800
+        self.screen_height = 400
+        self.scale = 100  # Adjust this scale factor based on your observations
+        self.cart_color = (0, 0, 255)  # Blue cart
+        self.pole_color = (0, 255, 0)  # Green pole
+        self.cart_width = 50
+        self.cart_height = 30
+        self.pole_length = 100  # Length of the pole
+        self.pole_width = 10
+        # Initialize Pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.clock = pygame.time.Clock()
 
         self.steps_beyond_done = None
 
@@ -199,76 +218,43 @@ class CartPoleEnv_adv(gym.Env):
                                             state_of_interest=theta,
                                             )
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        # Seed the environment if a seed is provided
+        self.np_random, seed = seeding.np_random(seed)
+        
+        # Reset the environment state
         self.state = self.np_random.uniform(low=-0.2, high=0.2, size=(4,))
-        # self.state[0] = self.np_random.uniform(low=5, high=6)
         self.state[0] = self.np_random.uniform(low=-5, high=5)
         self.steps_beyond_done = None
-        return np.array(self.state)
-
-    def render(self, mode='human'):
-        screen_width = 800
-        screen_height = 400
-
-        world_width = self.x_threshold * 2
-        scale = screen_width / world_width
-        carty = 100  # TOP OF CART
-        polewidth = 10.0
-        polelen = scale * 2.0
-        cartwidth = 50.0
-        cartheight = 30.0
-
-        if self.viewer is None:
-            from gym.envs.classic_control import rendering
-            self.viewer = rendering.Viewer(screen_width, screen_height)
-            l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
-            axleoffset = cartheight / 4.0
-            cart = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
-            self.carttrans = rendering.Transform()
-            cart.add_attr(self.carttrans)
-            self.viewer.add_geom(cart)
-            l, r, t, b = -polewidth / 2, polewidth / 2, polelen - polewidth / 2, -polewidth / 2
-            pole = rendering.FilledPolygon([(l, b), (l, t), (r, t), (r, b)])
-            pole.set_color(.8, .6, .4)
-            self.poletrans = rendering.Transform(translation=(0, axleoffset))
-            pole.add_attr(self.poletrans)
-            pole.add_attr(self.carttrans)
-            self.viewer.add_geom(pole)
-            self.axle = rendering.make_circle(polewidth / 2)
-            self.axle.add_attr(self.poletrans)
-            self.axle.add_attr(self.carttrans)
-            self.axle.set_color(.5, .5, .8)
-            self.viewer.add_geom(self.axle)
-            self.track = rendering.Line((0, carty), (screen_width, carty))
-            self.track.set_color(0, 0, 0)
-            self.viewer.add_geom(self.track)
-
-            # Render the target position
-            self.target = rendering.Line((self.target_pos * scale + screen_width / 2.0, 0),
-                                         (self.target_pos * scale + screen_width / 2.0, screen_height))
-            self.target.set_color(1, 0, 0)
-            self.viewer.add_geom(self.target)
+        
+        return np.array(self.state), {}  # Return state and an empty dictionary for compatibility
 
 
-            # # Render the constrain position
-            # self.cons = rendering.Line((self.cons_pos * scale + screen_width / 2.0, 0),
-            #                              (self.cons_pos * scale + screen_width / 2.0, screen_height))
-            # self.cons.set_color(0, 0, 1)
-            # self.viewer.add_geom(self.cons)
+    def render(self, mode="human"):
+        self.screen.fill((255, 255, 255))  # Clear the screen (white background)
 
-        if self.state is None: return None
+        # Draw the cart
+        cart_x = self.state[0] * 100 + self.screen_width / 2  # Mapping cart position
+        cart_y = self.screen_height // 2
 
-        x = self.state
-        cartx = x[0] * scale + screen_width / 2.0  # MIDDLE OF CART
-        self.carttrans.set_translation(cartx, carty)
-        self.poletrans.set_rotation(-x[2])
+        pygame.draw.rect(self.screen, self.cart_color,
+                         (cart_x - self.cart_width / 2, cart_y - self.cart_height / 2,
+                          self.cart_width, self.cart_height))
 
-        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+        # Draw the pole
+        pole_angle = self.state[2]  # Angle of the pole
+        pole_x = cart_x
+        pole_y = cart_y - self.cart_height / 2
+        pole_end_x = pole_x + np.sin(pole_angle) * self.pole_length
+        pole_end_y = pole_y - np.cos(pole_angle) * self.pole_length
+
+        pygame.draw.line(self.screen, self.pole_color, (pole_x, pole_y),
+                         (pole_end_x, pole_end_y), self.pole_width)
+
+        pygame.display.flip()  # Update the display
 
     def close(self):
-        if self.viewer:
-            self.viewer.close()
-            self.viewer = None
+        pygame.quit()
 
 def COST_1000(r1, r2, e1, e2, x, x_dot, theta, theta_dot):
     cost = np.sign(r2) * ((10 * r2) ** 2) - 4 * abs(x) ** 2
