@@ -59,16 +59,17 @@ class ActorNet(nn.Module):
         self.load_state_dict(torch.load(self.save_path))
 
 class LyapunovCriticNet(nn.Module):
-    def __init__(self, state_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='Value-Net', save_dir='tmp'):
+    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='Value-Net', save_dir='tmp'):
         super(LyapunovCriticNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
+        self.action_dims = action_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.name = name
         self.save_path = os.path.join(self.name, save_dir)
 
-        self.fc1 = nn.Linear(self.state_dims, self.fc1_dims)
+        self.fc1 = nn.Linear(self.state_dims + self.action_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.value = nn.Linear(self.fc2_dims, 16) # Paper indicates the output is 16
 
@@ -76,8 +77,9 @@ class LyapunovCriticNet(nn.Module):
         self.device = ('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
 
-    def forward(self, state):
-        layer1 = torch.relu(self.fc1(state))
+    def forward(self, state, action):
+        x = torch.cat([state, action], dim=1)
+        layer1 = torch.relu(self.fc1(x))
         layer2 = torch.relu(self.fc2(layer1))
         value = self.value(layer2)
 
