@@ -3,8 +3,8 @@ import torch.nn as nn
 from torch import optim
 import numpy as np
 import random
-from replay_buffer import ReplayBuffer
-from networks import ActorNet, LyapunovCriticNet
+from .replay_buffer import ReplayBuffer
+from .networks import ActorNet, LyapunovCriticNet
 
 class LAC():
     def __init__(self, state_dims, action_dims, max_action, alr=1e-4, clr=3e-4, llr=3e-4, gamma=0.99, tau=0.005, entropy=-1, 
@@ -28,13 +28,13 @@ class LAC():
         self.beta = nn.Parameter(torch.tensor(1.0))
         self.lagrange_optimizer = optim.Adam([self.beta, self.lamda], lr=self.clr)
 
-        self.memory = ReplayBuffer(self.mem_length)
+        self.memory = ReplayBuffer(self.mem_length, self.finite_horizon, self.horizon_n)
 
-        self.policy = ActorNet(alr, state_dims, action_dims, max_action)
-        self.l_net = LyapunovCriticNet(llr, state_dims)
+        self.policy = ActorNet(state_dims, action_dims, max_action, lr=alr)
+        self.l_net = LyapunovCriticNet(state_dims, action_dims, lr=llr)
 
         if not finite_horizon:
-            self.l_target_net = LyapunovCriticNet(llr, state_dims)
+            self.l_target_net = LyapunovCriticNet(state_dims, action_dims, lr=llr)
             self.l_target_net.load_state_dict(self.l_net.state_dict())
 
         
@@ -42,7 +42,7 @@ class LAC():
     # Do not use for policy gradient calculations as it returns a numpy array array detached from the
     # backwards propogation graph
     def choose_action(self, state, reparameterize=False):
-        state = torch.tensor([state]).to(self.policy.device)
+        state = torch.tensor([state], dtype=torch.float).to(self.policy.device)
 
         action, _ = self.policy.sample(state, reparameterize)
 
@@ -56,12 +56,12 @@ class LAC():
 
             states, actions, rewards, next_states, dones, horizon_value = zip(*batch)
 
-            states = torch.tensor(states).to(self.policy.device)
-            actions = torch.tensor(actions).to(self.policy.device)
-            rewards = torch.tensor(rewards).to(self.policy.device)
-            next_states = torch.tensor(next_states).to(self.policy.device)
-            dones = torch.tensor(dones).to(self.policy.device)
-            horizon_values = torch.tensor(horizon_value).to(self.policy.device)
+            states = torch.tensor(states, dtype=torch.float).to(self.policy.device)
+            actions = torch.tensor(actions, dtype=torch.float).to(self.policy.device)
+            rewards = torch.tensor(rewards, dtype=torch.float).to(self.policy.device)
+            next_states = torch.tensor(next_states, dtype=torch.float).to(self.policy.device)
+            dones = torch.tensor(dones, dtype=torch.float).to(self.policy.device)
+            horizon_values = torch.tensor(horizon_value, dtype=torch.float).to(self.policy.device)
 
             # Calculate L_c Lyapunov Loss
             l_net_out = self.l_net.forward(states, actions)
