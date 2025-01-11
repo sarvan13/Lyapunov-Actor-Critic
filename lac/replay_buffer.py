@@ -26,7 +26,7 @@ class ReplayBuffer():
             rewards = np.array(rewards)
             last_reward = rewards[-1]
 
-            rewards_aug = np.concatenate(rewards, last_reward*np.ones(self.horizon_n))
+            rewards_aug = np.concatenate([rewards, last_reward*np.ones(self.horizon_n)])
             horizon_values = [np.sum(rewards_aug[i:i+self.horizon_n]) for i in range(len(rewards))]
 
             for tup, value in zip(self.current_path, horizon_values):

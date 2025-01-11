@@ -101,19 +101,20 @@ class CartPoleEnv_adv(gym.Env):
         self.seed()
         self.state = None
 
-        self.screen_width = 800
-        self.screen_height = 400
-        self.scale = 100  # Adjust this scale factor based on your observations
-        self.cart_color = (0, 0, 255)  # Blue cart
-        self.pole_color = (0, 255, 0)  # Green pole
-        self.cart_width = 50
-        self.cart_height = 30
-        self.pole_length = 100  # Length of the pole
-        self.pole_width = 10
-        # Initialize Pygame
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-        self.clock = pygame.time.Clock()
+        if self.render_mode is "Human":
+            self.screen_width = 800
+            self.screen_height = 400
+            self.scale = 100  # Adjust this scale factor based on your observations
+            self.cart_color = (0, 0, 255)  # Blue cart
+            self.pole_color = (0, 255, 0)  # Green pole
+            self.cart_width = 50
+            self.cart_height = 30
+            self.pole_length = 100  # Length of the pole
+            self.pole_width = 10
+            # Initialize Pygame
+            pygame.init()
+            self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+            self.clock = pygame.time.Clock()
 
         self.steps_beyond_done = None
 

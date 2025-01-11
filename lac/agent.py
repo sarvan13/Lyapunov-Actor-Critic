@@ -78,17 +78,12 @@ class LAC():
 
             # Calculate Policy Loss
             _, log_probs = self.policy.sample(states, reparameterize=True)
-            next_actions = self.policy.sample(next_states, reparameterize=True)
+            next_actions, _ = self.policy.sample(next_states, reparameterize=True)
             l_net_out_next = self.l_net.forward(next_states, next_actions)
             l_c_next = (l_net_out_next ** 2).sum(dim=1)
 
             policy_loss = self.beta * (log_probs + self.entropy) + self.lamda * (l_c_next - l_c.detach() + self.alpha*rewards)
-
-
-            
-            self.l_net.optimizer.zero_grad()
-            lyapunov_loss.backward()
-            self.l_net.optimizer.step()
+            policy_loss = policy_loss.mean()
 
             self.policy.optimizer.zero_grad()
             self.lagrange_optimizer.zero_grad()
@@ -96,11 +91,14 @@ class LAC():
             self.policy.optimizer.step()
             self.lagrange_optimizer.step()
 
+            self.l_net.optimizer.zero_grad()
+            lyapunov_loss.backward()
+            self.l_net.optimizer.step()
+
             with torch.no_grad():
-                self.beta.clamp(min=0)
-                self.lamda.clamp(min=0)
+                self.beta.copy_(self.beta.clamp(min=0))
+                self.lamda.copy_(self.lamda.clamp(min=0))
 
 
     def store_transition(self, state, action, reward, next_state, terminated):
         self.memory.store((state, action, reward, next_state, terminated))
-    
