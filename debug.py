@@ -8,7 +8,7 @@ from lac.agent import LAC
 from tqdm import tqdm
 import numpy as np
 
-environment = gym.make("CartPoleadv-v1")
+environment = gym.make("CartPoleadv-v1", render_mode="Human")
 
 agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0], finite_horizon=True, horizon_n=5)
 
@@ -23,15 +23,17 @@ total_steps = 0
 for _ in tqdm(range(max_num_episodes)):
     episode_cost = 0
     for i in range(max_episode_length):
+        input("Press Enter to step the environment...")  # Wait for Enter key press
         action = agent.choose_action(state)
         next_state, cost, terminated, truncated = environment.step(action)
+        print(cost)
 
         agent.store_transition(state, action, cost, next_state, terminated)
 
         episode_cost += cost
         total_steps += 1
 
-        #environment.render()
+        environment.render()
 
         if terminated:
             break

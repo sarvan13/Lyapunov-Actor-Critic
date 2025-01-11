@@ -66,23 +66,29 @@ class LAC():
             # Calculate L_c Lyapunov Loss
             l_net_out = self.l_net.forward(states, actions)
             l_c = (l_net_out ** 2).sum(dim=1)
-            with torch.no_grad():
-                if self.finite_horizon:
-                    l_target = horizon_values
-                else:
-                    next_actions = self.policy.sample(next_states, reparameterize=False)
-                    l_target = rewards + self.gamma * self.l_target_net.forward(next_states, next_actions)
+            
+            if self.finite_horizon:
+                l_target = horizon_values
+            else:
+                next_actions = self.policy.sample(next_states, reparameterize=False)
+                l_target = rewards + self.gamma * self.l_target_net.forward(next_states, next_actions)
             
             loss_func = nn.MSELoss()
             lyapunov_loss = loss_func(l_c,l_target)
+
+            self.l_net.optimizer.zero_grad()
+            lyapunov_loss.backward()
+            self.l_net.optimizer.step()
 
             # Calculate Policy Loss
             _, log_probs = self.policy.sample(states, reparameterize=True)
             next_actions, _ = self.policy.sample(next_states, reparameterize=True)
             l_net_out_next = self.l_net.forward(next_states, next_actions)
             l_c_next = (l_net_out_next ** 2).sum(dim=1)
+            l_net_out = self.l_net.forward(states, actions)
+            l_c = (l_net_out ** 2).sum(dim=1)
 
-            policy_loss = self.beta * (log_probs + self.entropy) + self.lamda * (l_c_next - l_c.detach() + self.alpha*rewards)
+            policy_loss = self.beta * (log_probs + self.entropy) + self.lamda * (l_c_next - l_c + self.alpha*rewards)
             policy_loss = policy_loss.mean()
 
             self.policy.optimizer.zero_grad()
@@ -91,13 +97,8 @@ class LAC():
             self.policy.optimizer.step()
             self.lagrange_optimizer.step()
 
-            self.l_net.optimizer.zero_grad()
-            lyapunov_loss.backward()
-            self.l_net.optimizer.step()
-
-            with torch.no_grad():
-                self.beta.copy_(self.beta.clamp(min=0))
-                self.lamda.copy_(self.lamda.clamp(min=0))
+            self.beta.clamp(min=0)
+            self.lamda.clamp(min=0)
 
 
     def store_transition(self, state, action, reward, next_state, terminated):

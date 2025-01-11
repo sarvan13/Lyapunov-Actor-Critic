@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 # Load the .npy files
 x = np.load('lac-step-arr.npy')
 y = np.load('lac-cost-arr.npy')
+x = x/1000
 
 # Plot the data
 plt.plot(x, y, marker='o', linestyle='-')
