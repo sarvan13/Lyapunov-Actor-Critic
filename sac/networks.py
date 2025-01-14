@@ -1,11 +1,11 @@
-import torch
-import torch.nn as nn
-from torch.distributions import Normal  # Normal distribution for continuous actions
 import os
+import torch
 import torch.optim as optim
+import torch.nn as nn
+from torch.distributions import Normal
 
 class ActorNet(nn.Module):
-    def __init__(self, state_dims, action_dims, max_action, lr=1e-4, fc1_dims=256, fc2_dims=256, 
+    def __init__(self, lr, state_dims, action_dims, max_action, fc1_dims=256, fc2_dims=256, 
                  reparam_noise=1e-6, name='Actor', save_dir='tmp'):
         super(ActorNet, self).__init__()
         self.lr = lr
@@ -47,7 +47,7 @@ class ActorNet(nn.Module):
 
         tanh_action = torch.tanh(sampled_action)
         action = tanh_action * self.max_action
-        log_prob = normal.log_prob(sampled_action) - torch.log(self.max_action*(1 - tanh_action.pow(2)) + self.reparam_noise)
+        log_prob = normal.log_prob(sampled_action) - torch.log(self.max_action * (1 - tanh_action.pow(2)) + self.reparam_noise)
         log_prob = log_prob.sum(dim=1, keepdim=True)
 
         return action, log_prob
@@ -57,41 +57,66 @@ class ActorNet(nn.Module):
     
     def load(self):
         self.load_state_dict(torch.load(self.save_path))
-
-class LyapunovCriticNet(nn.Module):
-    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='Value-Net', save_dir='tmp'):
-        super(LyapunovCriticNet, self).__init__()
+    
+class QNet(nn.Module):
+    def __init__(self, lr, state_dims, action_dims, fc1_dims=256, fc2_dims=256, 
+                 name='Q-Critic', save_dir='tmp'):
+        super(QNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
         self.action_dims = action_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.name = name
-        self.save_path = os.path.join(self.name, save_dir)
+        self.save_path = os.path.join(save_dir, name)
 
         self.fc1 = nn.Linear(self.state_dims + self.action_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.value = nn.Linear(self.fc2_dims, 16) # Paper indicates the output is 16
+        self.q = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.device = ('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
 
     def forward(self, state, action):
-        x = torch.cat([state, action], dim=1)
-        layer1 = torch.relu(self.fc1(x))
+        state_action = torch.cat([state, action], dim=1)
+        layer1 = torch.relu(self.fc1(state_action))
+        layer2 = torch.relu(self.fc2(layer1))
+        q_value = self.q(layer2)
+
+        return q_value
+    
+    def save(self):
+        torch.save(self.state_dict(), self.save_path)
+    
+    def load(self):
+        self.load_state_dict(torch.load(self.save_path))
+
+class ValueNet(nn.Module):
+    def __init__(self, lr, state_dims, fc1_dims=256, fc2_dims=256, name='Value-Net', save_dir='tmp'):
+        super(ValueNet, self).__init__()
+        self.lr = lr
+        self.state_dims = state_dims
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+        self.name = name
+        self.save_path = os.path.join(self.name, save_dir)
+
+        self.fc1 = nn.Linear(self.state_dims, self.fc1_dims)
+        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.value = nn.Linear(self.fc2_dims, 1)
+
+        self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
+        self.device = ('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.to(self.device)
+
+    def forward(self, state):
+        layer1 = torch.relu(self.fc1(state))
         layer2 = torch.relu(self.fc2(layer1))
         value = self.value(layer2)
 
         return value
-    def forward_single(self, state, action):
-        x = torch.cat([state, action], dim=0)
-        layer1 = torch.relu(self.fc1(x))
-        layer2 = torch.relu(self.fc2(layer1))
-        value = self.value(layer2)
-
-        return value
-
+    
     def save(self):
         torch.save(self.state_dict(), self.save_path)
     

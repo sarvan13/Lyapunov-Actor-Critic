@@ -104,7 +104,7 @@ class CartPoleEnv_adv(gym.Env):
         if self.render_mode is "Human":
             self.screen_width = 800
             self.screen_height = 400
-            self.scale = 100  # Adjust this scale factor based on your observations
+            self.scale = 40  # Adjust this scale factor based on your observations
             self.cart_color = (0, 0, 255)  # Blue cart
             self.pole_color = (0, 255, 0)  # Green pole
             self.cart_width = 50
@@ -235,7 +235,7 @@ class CartPoleEnv_adv(gym.Env):
         self.screen.fill((255, 255, 255))  # Clear the screen (white background)
 
         # Draw the cart
-        cart_x = self.state[0] * 100 + self.screen_width / 2  # Mapping cart position
+        cart_x = self.state[0] * self.scale + self.screen_width / 2  # Mapping cart position
         cart_y = self.screen_height // 2
 
         pygame.draw.rect(self.screen, self.cart_color,
