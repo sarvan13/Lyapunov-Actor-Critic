@@ -1,7 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-setup(name='cart_pole',
-      version='0.0.1',
-      install_requires=["gymnasium",
-                        "pygame>=2.1.3"],
-      packages=["env", "env.cart_pole"],)
+setup(
+    name='custom_envs',
+    version='0.1.0',
+    packages=find_packages(),
+    install_requires=[
+        'gymnasium',
+        'mujoco',
+        # Add other dependencies here
+    ],
+)
