@@ -105,23 +105,23 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
         )
 
 
-    def step(self, a):
-        reward = 1.0
-        self.do_simulation(a, self.frame_skip)
-        ob = self._get_obs()
-        terminated = bool(not np.isfinite(ob).all() or (np.abs(ob[1]) > 0.35) or (np.abs(ob[1]) >= 10.0))
-        if self.render_mode == "human":
-            self.render()
-        return ob, reward, terminated, False, {}
     # def step(self, a):
+    #     reward = 1.0
     #     self.do_simulation(a, self.frame_skip)
     #     ob = self._get_obs()
     #     terminated = bool(not np.isfinite(ob).all() or (np.abs(ob[1]) > 0.35) or (np.abs(ob[1]) >= 10.0))
-    #     cost = (ob[0]/10.0)**2 + 20.0*(ob[1]/0.2)**2
-
     #     if self.render_mode == "human":
     #         self.render()
-    #     return ob, cost, terminated, False, {}
+    #     return ob, reward, terminated, False, {}
+    def step(self, a):
+        self.do_simulation(a, self.frame_skip)
+        ob = self._get_obs()
+        terminated = bool(not np.isfinite(ob).all() or (np.abs(ob[1]) > 0.35) or (np.abs(ob[0]) >= 10.0))
+        cost = (ob[0]/10.0)**2 + 20.0*(ob[1]/0.2)**2
+
+        if self.render_mode == "human":
+            self.render()
+        return ob, cost, terminated, False, {}
 
     def reset_model(self):
         qpos_x = self.init_qpos[0] + self.np_random.uniform(

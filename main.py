@@ -8,7 +8,7 @@ from lac.agent import LAC
 from tqdm import tqdm
 import numpy as np
 
-environment = gym.make("CartPoleadv-v1")
+environment = gym.make('CustomInvertedPendulum-v0')
 
 agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0], finite_horizon=True, horizon_n=5)
 
