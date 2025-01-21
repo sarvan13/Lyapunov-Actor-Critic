@@ -88,7 +88,7 @@ class LAC():
             l_net_out = self.l_net.forward(states, actions)
             l_c = (l_net_out ** 2).sum(dim=1)
 
-            policy_loss = self.beta * (log_probs + self.entropy) + self.lamda * (l_c_next - l_c + self.alpha*rewards)
+            policy_loss = self.beta * (log_probs + self.entropy) + self.lamda * (l_c_next - l_c.detach() + self.alpha*rewards)
             policy_loss = policy_loss.mean()
 
             self.policy.optimizer.zero_grad()
@@ -97,9 +97,20 @@ class LAC():
             self.policy.optimizer.step()
             self.lagrange_optimizer.step()
 
-            self.beta.clamp(min=0)
-            self.lamda.clamp(min=0)
+            self.beta.data.clamp_(min=0)
+            self.lamda.data.clamp_(min=0)
 
 
     def store_transition(self, state, action, reward, next_state, terminated):
         self.memory.store((state, action, reward, next_state, terminated))
+
+    def save(self):
+        self.policy.save()
+        self.l_net.save()
+        if not self.finite_horizon:
+            self.l_target_net.save()
+    def load(self):
+        self.policy.load()
+        self.l_net.load()
+        if not self.finite_horizon:
+            self.l_target_net.load()

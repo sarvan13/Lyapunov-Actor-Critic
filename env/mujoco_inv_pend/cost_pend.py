@@ -103,6 +103,9 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
             observation_space=observation_space,
             **kwargs
         )
+        self.step_count = 0
+        self.max_step_per_episode = 250
+        self.truncated = False
 
 
     # def step(self, a):
@@ -121,7 +124,12 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
 
         if self.render_mode == "human":
             self.render()
-        return ob, cost, terminated, False, {}
+        
+        self.step_count += 1
+        if self.step_count >= self.max_step_per_episode:
+            self.truncated = True
+
+        return ob, cost, terminated, self.truncated, {}
 
     def reset_model(self):
         qpos_x = self.init_qpos[0] + self.np_random.uniform(
@@ -135,6 +143,9 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
             size=self.model.nv, low=-0.01, high=0.01
         )
         self.set_state(qpos, qvel)
+        self.step_count = 0
+        self.truncated = False
+
         return self._get_obs()
 
     # def reset_model(self):
