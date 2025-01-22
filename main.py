@@ -1,6 +1,5 @@
 # Run Cart Pole env
 import torch
-torch.autograd.set_detect_anomaly(True)
 
 import gymnasium as gym
 import env
@@ -9,40 +8,53 @@ from tqdm import tqdm
 import numpy as np
 
 environment = gym.make('CustomInvertedPendulum-v0')
-
-agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0], finite_horizon=True, horizon_n=5)
+print(environment.action_space.high[0])
+agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
 
 state, info = environment.reset(seed=42)
-max_num_episodes = 5000
+max_num_episodes = 500
 max_episode_length = 250
-num_gradient_updates = 1
 cost_arr = []
 step_arr = []
+steps_per_episode = []
 total_steps = 0
+longest_episode = 0
 
 for _ in tqdm(range(max_num_episodes)):
     episode_cost = 0
+    episode_steps = 0
     for i in range(max_episode_length):
-        action = agent.choose_action(state)
-        next_state, cost, terminated, truncated = environment.step(action)
+        action = agent.choose_action(state, reparameterize=False)
+        next_state, cost, terminated, truncated, _ = environment.step(action)
+        done = terminated or truncated
 
-        agent.store_transition(state, action, cost, next_state, terminated)
+        agent.store_transition(state, action, cost, next_state, done)
+
+        state = next_state
 
         episode_cost += cost
+        episode_steps += 1
         total_steps += 1
-
-        #environment.render()
 
         if terminated:
             break
 
-    environment.reset()
+    state, _ = environment.reset()
     
-    for j in range(num_gradient_updates):
+    for j in range(episode_steps):
         agent.train()
     
+    if episode_steps > longest_episode:
+        longest_episode = episode_steps
+
+    steps_per_episode.append(episode_steps)
     cost_arr.append(episode_cost)
     step_arr.append(total_steps)
 
 np.save("lac-cost-arr.npy", np.array(cost_arr))
 np.save("lac-step-arr.npy", np.array(step_arr))
+print(f"Longest Episode: {longest_episode}")
+print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")
+print(f"Beta: {agent.beta.item()}")
+print(f"Lambda: {agent.lamda.item()}")
+agent.save()

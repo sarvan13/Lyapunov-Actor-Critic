@@ -10,7 +10,6 @@ import numpy as np
 environment = gym.make('CustomInvertedPendulum-v0')
 print(environment.action_space.high[0])
 agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
-agent.load()
 
 state, info = environment.reset(seed=42)
 max_num_episodes = 1000
@@ -39,7 +38,7 @@ for _ in tqdm(range(max_num_episodes)):
         if terminated:
             break
 
-    environment.reset()
+    state, _ = environment.reset()
     
     for j in range(episode_steps):
         agent.train()
@@ -51,8 +50,7 @@ for _ in tqdm(range(max_num_episodes)):
     cost_arr.append(episode_cost)
     step_arr.append(total_steps)
 
-agent.save()
-np.save("sac-cost-test-arr.npy", np.array(cost_arr))
-np.save("sac-cost-test-step-arr.npy", np.array(step_arr))
+np.save("sac-cost-arr.npy", np.array(cost_arr))
+np.save("sac-step-arr.npy", np.array(step_arr))
 print(f"Longest Episode: {longest_episode}")
 print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")
