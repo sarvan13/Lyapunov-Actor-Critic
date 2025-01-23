@@ -17,10 +17,14 @@ max_num_episodes = 1000
 max_episode_length = 250
 cost_arr = []
 step_arr = []
+steps_per_episode = []
+lambda_arr = []
 total_steps = 0
 
 for _ in tqdm(range(max_num_episodes)):
     episode_cost = 0
+    episode_steps = 0
+    lambda_arr.append(agent.lamda.item())
     for i in range(max_episode_length):
         action = agent.choose_action(state)
         next_state, cost, terminated, truncated, _  = environment.step(action)
@@ -50,4 +54,9 @@ print(f"Beta: {agent.beta}")
 print(f"Lambda: {agent.lamda}")
 np.save("lac-cost-arr.npy", np.array(cost_arr))
 np.save("lac-step-arr.npy", np.array(step_arr))
+np.save("lac-lambda-arr.npy", np.array(lambda_arr))
+print(f"Longest Episode: {longest_episode}")
+print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")
+print(f"Beta: {agent.beta.item()}")
+print(f"Lambda: {agent.lamda.item()}")
 agent.save()
