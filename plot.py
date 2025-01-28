@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 # Load the .npy files
 # x = np.load('C:/Users/Sarvan/Desktop/School/UVIC/Lyapunov-Actor-Critic/lac-step-arr.npy')
 # y = np.load('C:/Users/Sarvan/Desktop/School/UVIC/Lyapunov-Actor-Critic/lac-cost-arr.npy')
-x = np.load('C:/Users/Sarvan/Desktop/School/UVIC/lac-step-arr.npy')
-y = np.load('C:/Users/Sarvan/Desktop/School/UVIC/lac-cost-arr.npy')
+x = np.load('/home/sarvan/Classes/Lyapunov-Actor-Critic/lac-step-arr.npy')
+y = np.load('/home/sarvan/Classes/Lyapunov-Actor-Critic/lac-cost-arr.npy')
 x = x/1000
 lac_mean_rewards = [np.mean(y[np.max((0,i - 50)): i]) for i in range(len(y))]
 

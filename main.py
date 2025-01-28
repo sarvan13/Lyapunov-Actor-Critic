@@ -12,11 +12,13 @@ print(environment.action_space.high[0])
 agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
 
 state, info = environment.reset(seed=42)
-max_num_episodes = 500
+max_num_episodes = 1000
 max_episode_length = 250
 cost_arr = []
 step_arr = []
 steps_per_episode = []
+lambda_arr = []
+beta_arr = []
 total_steps = 0
 longest_episode = 0
 
@@ -50,6 +52,8 @@ for _ in tqdm(range(max_num_episodes)):
     steps_per_episode.append(episode_steps)
     cost_arr.append(episode_cost)
     step_arr.append(total_steps)
+    lambda_arr.append(agent.lamda.item())
+    beta_arr.append(agent.beta.item())
 
 np.save("lac-cost-arr.npy", np.array(cost_arr))
 np.save("lac-step-arr.npy", np.array(step_arr))

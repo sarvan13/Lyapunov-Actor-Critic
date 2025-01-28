@@ -43,13 +43,13 @@ for _ in tqdm(range(max_num_episodes)):
         # print(f"Theta: {state[1]}")
         # print(f"Action: {action}")
         # input("Press Enter to take the next step...")
-        if model == 'lac':
-            l_net_out = agent.l_net.forward(torch.tensor([state], dtype=torch.float32).to(agent.policy.device), torch.tensor([action], dtype=torch.float32).to(agent.policy.device))
-            l_c = (l_net_out ** 2).sum(dim=1)
-            lyapunov_arr.append(l_c.item())
-            action_arr.append(float(action))
-            x.append(state[0])
-            theta.append(state[1])
+        # if model == 'lac':
+        #     l_net_out = agent.l_net.forward(torch.tensor([state], dtype=torch.float32).to(agent.policy.device), torch.tensor([action], dtype=torch.float32).to(agent.policy.device))
+        #     l_c = (l_net_out ** 2).sum(dim=1)
+        #     lyapunov_arr.append(l_c.item())
+        #     action_arr.append(float(action))
+        #     x.append(state[0])
+        #     theta.append(state[1])
 
         # action_arr.append(float(action))
         next_state, cost, terminated, truncated, _ = environment.step(action)
@@ -66,18 +66,18 @@ for _ in tqdm(range(max_num_episodes)):
 
     state, _ = environment.reset()
 
-    if model == 'lac':
-        plt.scatter(x, lyapunov_arr, marker='o')
-        plt.xlabel('X')
-        plt.ylabel('Lyapunov')
-        plt.title('Lyapunov over One Episode')
-        plt.show()
+    # if model == 'lac':
+    #     plt.scatter(x, lyapunov_arr, marker='o')
+    #     plt.xlabel('X')
+    #     plt.ylabel('Lyapunov')
+    #     plt.title('Lyapunov over One Episode')
+    #     plt.show()
 
-        plt.scatter(theta, lyapunov_arr, marker='o')
-        plt.xlabel('Theta')
-        plt.ylabel('Lyapunov')
-        plt.title('Lyapunov over One Episode')
-        plt.show()
+    #     plt.scatter(theta, lyapunov_arr, marker='o')
+    #     plt.xlabel('Theta')
+    #     plt.ylabel('Lyapunov')
+    #     plt.title('Lyapunov over One Episode')
+    #     plt.show()
 
 # plt.plot(step_arr, action_arr, marker='o', linestyle='-')   
 # plt.xlabel('Step')

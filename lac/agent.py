@@ -24,18 +24,24 @@ class LAC():
         self.finite_horizon = finite_horizon
         self.horizon_n = horizon_n
 
-        self.lamda = nn.Parameter(torch.tensor(1.0))
-        self.beta = nn.Parameter(torch.tensor(1.0))
-        self.lagrange_optimizer = optim.Adam([self.beta, self.lamda], lr=self.clr)
-
         self.memory = ReplayBuffer(self.mem_length, self.finite_horizon, self.horizon_n)
 
         self.policy = ActorNet(state_dims, action_dims, max_action, lr=alr)
         self.l_net = LyapunovCriticNet(state_dims, action_dims, lr=llr)
+        self.device = self.policy.device
 
         if not finite_horizon:
             self.l_target_net = LyapunovCriticNet(state_dims, action_dims, lr=llr)
             self.l_target_net.load_state_dict(self.l_net.state_dict())
+        
+        lamda = torch.tensor([1.0])
+        beta = torch.tensor([1.0])
+        self.log_lamda = nn.Parameter(torch.tensor(torch.log(lamda)))
+        self.log_beta = nn.Parameter(torch.tensor(torch.log(beta)))
+        self.lamda = torch.exp(self.log_lamda.detach())
+        self.beta = torch.exp(self.log_beta.detach())
+        self.lambda_optimizer = optim.Adam([self.log_lamda], lr=self.clr)
+        self.beta_optimizer = optim.Adam([self.log_beta], lr=self.clr)
 
     # Do not use for policy gradient calculations as it returns a numpy array array detached from the
     # backwards propogation graph
@@ -90,13 +96,20 @@ class LAC():
             policy_loss = policy_loss.mean()
 
             self.policy.optimizer.zero_grad()
-            self.lagrange_optimizer.zero_grad()
             policy_loss.backward()
             self.policy.optimizer.step()
-            self.lagrange_optimizer.step()
 
-            self.beta.data.clamp_(min=0, max=1)
-            self.lamda.data.clamp_(min=0, max=1)
+            lambda_loss = -(self.log_lamda * (l_c_next.detach() - l_c.detach() + self.alpha*rewards)).mean()
+            beta_loss = -(self.log_beta * (log_probs + self.entropy).detach()).mean()
+            self.lambda_optimizer.zero_grad()
+            lambda_loss.backward()
+            self.lambda_optimizer.step()
+            self.beta_optimizer.zero_grad()
+            beta_loss.backward()
+            self.beta_optimizer.step()
+
+            self.beta = torch.exp(self.log_beta)
+            self.lamda = torch.clamp(torch.exp(self.log_lamda), min=0, max=1)  
 
 
     def store_transition(self, state, action, reward, next_state, terminated):

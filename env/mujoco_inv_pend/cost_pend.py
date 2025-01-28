@@ -99,7 +99,7 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
         observation_space = Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float64)
         MujocoEnv.__init__(
             self,
-            "C:/Users/Sarvan/Desktop/School/UVIC/Lyapunov-Actor-Critic/env/mujoco_inv_pend/inverted_pendulum.xml",
+            "/home/sarvan/Classes/Lyapunov-Actor-Critic/env/mujoco_inv_pend/inverted_pendulum.xml",
             2,
             observation_space=observation_space,
             **kwargs
