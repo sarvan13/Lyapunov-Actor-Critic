@@ -6,7 +6,7 @@ import torch.optim as optim
 
 class ActorNet(nn.Module):
     def __init__(self, state_dims, action_dims, max_action, lr=1e-4, fc1_dims=256, fc2_dims=256, 
-                 reparam_noise=1e-6, name='LACActor.pth', save_dir='tmp'):
+                 reparam_noise=1e-6, name='LACActor.pth', save_dir='data/half_cheetah/models'):
         super(ActorNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
@@ -59,7 +59,7 @@ class ActorNet(nn.Module):
         self.load_state_dict(torch.load(self.save_path))
 
 class LyapunovCriticNet(nn.Module):
-    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='Lc.pth', save_dir='tmp'):
+    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='Lc.pth', save_dir='data/half_cheetah/models'):
         super(LyapunovCriticNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims

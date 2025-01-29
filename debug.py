@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 environment = gym.make('CustomInvertedPendulum-v0', render_mode='human')
 print(environment.action_space.high[0])
-model = 'sac'
+model = 'lac'
 
 if model == 'lac':
     agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
