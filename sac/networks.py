@@ -6,7 +6,7 @@ from torch.distributions import Normal
 
 class ActorNet(nn.Module):
     def __init__(self, lr, state_dims, action_dims, max_action, fc1_dims=256, fc2_dims=256, 
-                 reparam_noise=1e-6, name='Actor.pth', save_dir='tmp'):
+                 reparam_noise=1e-6, name='Actor2.pth', save_dir='data/cartpole/models'):
         super(ActorNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
@@ -60,7 +60,7 @@ class ActorNet(nn.Module):
     
 class QNet(nn.Module):
     def __init__(self, lr, state_dims, action_dims, fc1_dims=256, fc2_dims=256, 
-                 name='Q-Critic.pth', save_dir='tmp'):
+                 name='Q-Critic2.pth', save_dir='data/cartpole/models'):
         super(QNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
@@ -93,7 +93,7 @@ class QNet(nn.Module):
         self.load_state_dict(torch.load(self.save_path))
 
 class ValueNet(nn.Module):
-    def __init__(self, lr, state_dims, fc1_dims=256, fc2_dims=256, name='Value-Net.pth', save_dir='tmp'):
+    def __init__(self, lr, state_dims, fc1_dims=256, fc2_dims=256, name='Value-Net2.pth', save_dir='data/cartpole/models'):
         super(ValueNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims

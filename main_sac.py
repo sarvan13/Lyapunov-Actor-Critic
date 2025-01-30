@@ -50,7 +50,7 @@ for _ in tqdm(range(max_num_episodes)):
     cost_arr.append(episode_cost)
     step_arr.append(total_steps)
 
-np.save("sac-cost-arr.npy", np.array(cost_arr))
-np.save("sac-step-arr.npy", np.array(step_arr))
+np.save("data/cartpole/arrays/sac-cost2-arr.npy", np.array(cost_arr))
+np.save("data/cartpole/arrays/sac-step2-arr.npy", np.array(step_arr))
 print(f"Longest Episode: {longest_episode}")
 print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")

@@ -121,7 +121,7 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
         self.do_simulation(a, self.frame_skip)
         ob = self._get_obs()
         terminated = bool(not np.isfinite(ob).all() or (np.abs(ob[1]) > 0.35) or (np.abs(ob[0]) >= 10.0))
-        cost = (ob[0]/10.0)**2 + 20.0*(ob[1]/0.2)**2
+        cost = (ob[0]/10.0)**2 + 20.0*(ob[1]/0.35)**2
 
         if self.render_mode == "human":
             self.render()
@@ -129,6 +129,9 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
         self.step_count += 1
         if self.step_count >= self.max_step_per_episode:
             self.truncated = True
+        
+        # if terminated:
+        #     cost += 100.0
 
         return ob, cost, terminated, self.truncated, {}
 
@@ -137,7 +140,7 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
             size=1, low=-5.0, high=5.0
         )
         qpos_theta = self.init_qpos[1] + self.np_random.uniform(
-            size=1, low=-0.09, high=0.09
+            size=1, low=-0.1, high=0.1
         )
         qpos = np.array([qpos_x, qpos_theta]).ravel()
         qvel = self.init_qvel + self.np_random.uniform(

@@ -22,9 +22,8 @@ else:
 
 state, info = environment.reset(seed=42)
 max_num_episodes = 10
-max_episode_length = 250
+max_episode_length = 1000
 cost_arr = []
-step_arr = []
 action_arr = []
 steps_per_episode = []
 total_steps = 0
@@ -36,6 +35,7 @@ for _ in tqdm(range(max_num_episodes)):
     lyapunov_arr = []
     x = []
     theta = []
+    step_arr = []
     for i in range(max_episode_length):
         action = agent.choose_action(state, reparameterize=False)
         # print(f"Lyapunov: {l_c.item()}")
@@ -51,14 +51,17 @@ for _ in tqdm(range(max_num_episodes)):
         #     x.append(state[0])
         #     theta.append(state[1])
 
+        theta.append(state[1])
+        x.append(state[0])
+
         # action_arr.append(float(action))
         next_state, cost, terminated, truncated, _ = environment.step(action)
 
         state = next_state
 
         # episode_cost += cost
-        # episode_steps += 1
-        # step_arr.append(episode_steps)
+        episode_steps += 1
+        step_arr.append(episode_steps)
         # cost_arr.append(episode_cost)
 
         if terminated:
@@ -78,9 +81,11 @@ for _ in tqdm(range(max_num_episodes)):
     #     plt.ylabel('Lyapunov')
     #     plt.title('Lyapunov over One Episode')
     #     plt.show()
-
-# plt.plot(step_arr, action_arr, marker='o', linestyle='-')   
-# plt.xlabel('Step')
-# plt.ylabel('Action')
-# plt.title('Control Policy over One Episode')
-# plt.show()
+theta = [100*val for val in theta] 
+plt.plot(step_arr, theta, marker='o', linestyle='-', label='Theta') 
+plt.plot(step_arr, x, marker='o', linestyle='-', label='X')  
+plt.xlabel('Step')
+plt.ylabel('Value')
+plt.title('Theta and X over One Episode')
+plt.legend()
+plt.show()
