@@ -74,8 +74,10 @@ class LAC():
             if self.finite_horizon:
                 l_target = horizon_values
             else:
-                next_actions = self.policy.sample(next_states, reparameterize=False)
-                l_target = rewards + self.gamma * self.l_target_net.forward(next_states, next_actions)
+                next_actions, _ = self.policy.sample(next_states, reparameterize=False)
+                l_target_net_out = self.l_target_net.forward(next_states, next_actions)
+                l_target_value = (l_target_net_out ** 2).sum(dim=1)
+                l_target = rewards + self.gamma * l_target_value * (1 - dones)
             
             loss_func = nn.MSELoss()
             lyapunov_loss = loss_func(l_c,l_target)
@@ -111,6 +113,11 @@ class LAC():
             self.beta = torch.exp(self.log_beta)
             self.lamda = torch.clamp(torch.exp(self.log_lamda), min=0, max=1)  
 
+            if not self.finite_horizon:
+                for target_param, param in zip(self.l_target_net.parameters(), self.l_net.parameters()):
+                    target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
+
+
 
     def store_transition(self, state, action, reward, next_state, terminated):
         self.memory.store((state, action, reward, next_state, terminated))
@@ -122,5 +129,5 @@ class LAC():
     def load(self):
         self.policy.load()
         self.l_net.load()
-        if not self.finite_horizon:
-            self.l_target_net.load_state_dict(self.l_net.state_dict())
+        # if not self.finite_horizon:
+        #     self.l_target_net.load_state_dict(self.l_net.state_dict())

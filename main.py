@@ -9,7 +9,8 @@ import numpy as np
 
 environment = gym.make('CustomInvertedPendulum-v0')
 print(environment.action_space.high[0])
-agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
+agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0], 
+            alpha=0.1, finite_horizon=True)
 
 state, info = environment.reset(seed=42)
 max_num_episodes = 1000

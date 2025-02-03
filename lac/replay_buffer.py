@@ -21,7 +21,7 @@ class ReplayBuffer():
         if not done:
             return
         
-        elif done and self.finite_horizon:
+        elif done:
             rewards = [data[2] for data in self.current_path]
             rewards = np.array(rewards)
             last_reward = rewards[-1]

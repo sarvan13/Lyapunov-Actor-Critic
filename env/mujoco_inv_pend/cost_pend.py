@@ -130,8 +130,8 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
         if self.step_count >= self.max_step_per_episode:
             self.truncated = True
         
-        # if terminated:
-        #     cost += 100.0
+        if terminated:
+            cost += 100.0
 
         return ob, cost, terminated, self.truncated, {}
 
@@ -140,7 +140,7 @@ class CustomInvertedPendulumEnv(MujocoEnv, utils.EzPickle):
             size=1, low=-5.0, high=5.0
         )
         qpos_theta = self.init_qpos[1] + self.np_random.uniform(
-            size=1, low=-0.1, high=0.1
+            size=1, low=-0.2, high=0.2
         )
         qpos = np.array([qpos_x, qpos_theta]).ravel()
         qvel = self.init_qvel + self.np_random.uniform(
