@@ -6,12 +6,11 @@ import torch.optim as optim
 
 class ActorNet(nn.Module):
     def __init__(self, state_dims, action_dims, max_action, lr=1e-4, fc1_dims=256, fc2_dims=256, 
-                 reparam_noise=1e-6, name='LACActorV.pth', save_dir='data/cartpole/models'):
+                 reparam_noise=1e-6, name='LACActorV.pth', save_dir='data/pendulum/models'):
         super(ActorNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
         self.action_dims = action_dims
-        self.max_action = max_action
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.reparam_noise = reparam_noise
@@ -26,6 +25,7 @@ class ActorNet(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.device = ('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
+        self.max_action = torch.tensor(max_action).to(self.device)
     
     def forward(self, state):
         layer1 = torch.relu(self.fc1(state))
@@ -59,7 +59,7 @@ class ActorNet(nn.Module):
         self.load_state_dict(torch.load(self.save_path))
 
 class LyapunovCriticNet(nn.Module):
-    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='LcV.pth', save_dir='data/cartpole/models'):
+    def __init__(self, state_dims, action_dims, lr=3e-4, fc1_dims=64, fc2_dims=64, name='LcV.pth', save_dir='data/pendulum/models'):
         super(LyapunovCriticNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims

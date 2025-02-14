@@ -9,12 +9,12 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 
-environment = gym.make('CustomInvertedPendulum-v0', render_mode='human')
+environment = gym.make('Pendulum-v1', render_mode='human')
 print(environment.action_space.high[0])
 model = 'lac'
 
 if model == 'lac':
-    agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
+    agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high)
     agent.load()
 else:
     agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])

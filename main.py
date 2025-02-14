@@ -7,14 +7,14 @@ from lac.agent import LAC
 from tqdm import tqdm
 import numpy as np
 
-environment = gym.make('CustomInvertedPendulum-v0')
+environment = gym.make('Pendulum-v1')
 print(environment.action_space.high[0])
-agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0], 
+agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high, 
             alpha=0.1, finite_horizon=True)
 
 state, info = environment.reset(seed=42)
-max_num_episodes = 1000
-max_episode_length = 250
+max_num_episodes = 5000
+max_episode_length = 200
 cost_arr = []
 step_arr = []
 steps_per_episode = []
@@ -28,7 +28,8 @@ for _ in tqdm(range(max_num_episodes)):
     episode_steps = 0
     for i in range(max_episode_length):
         action = agent.choose_action(state, reparameterize=False)
-        next_state, cost, terminated, truncated, _ = environment.step(action)
+        next_state, reward, terminated, truncated, _ = environment.step(action)
+        cost = -reward
 
         done = terminated or truncated
 
@@ -57,10 +58,10 @@ for _ in tqdm(range(max_num_episodes)):
     lambda_arr.append(agent.lamda.item())
     beta_arr.append(agent.beta.item())
 
-np.save("data/cartpole/arrays/lac-cost2-arr.npy", np.array(cost_arr))
-np.save("data/cartpole/arrays/lac-step2-arr.npy", np.array(step_arr))
-np.save("data/cartpole/arrays/lac-lambda2-arr.npy", np.array(lambda_arr))
-np.save("data/cartpole/arrays/lac-beta2-arr.npy", np.array(beta_arr))
+np.save("data/pendulum/arrays/lac-cost2-arr.npy", np.array(cost_arr))
+np.save("data/pendulum/arrays/lac-step2-arr.npy", np.array(step_arr))
+np.save("data/pendulum/arrays/lac-lambda2-arr.npy", np.array(lambda_arr))
+np.save("data/pendulum/arrays/lac-beta2-arr.npy", np.array(beta_arr))
 print(f"Longest Episode: {longest_episode}")
 print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")
 print(f"Beta: {agent.beta.item()}")
