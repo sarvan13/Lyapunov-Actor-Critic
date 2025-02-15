@@ -6,12 +6,11 @@ from torch.distributions import Normal
 
 class ActorNet(nn.Module):
     def __init__(self, lr, state_dims, action_dims, max_action, fc1_dims=256, fc2_dims=256, 
-                 reparam_noise=1e-6, name='Actor2.pth', save_dir='data/cartpole/models'):
+                 reparam_noise=1e-6, name='sac-pendulum-actor.pth', save_dir='data\cartpole\models'):
         super(ActorNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
         self.action_dims = action_dims
-        self.max_action = max_action
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.reparam_noise = reparam_noise
@@ -26,6 +25,7 @@ class ActorNet(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
         self.device = ('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
+        self.max_action = torch.tensor(max_action).to(self.device)
     
     def forward(self, state):
         layer1 = torch.relu(self.fc1(state))
@@ -60,7 +60,7 @@ class ActorNet(nn.Module):
     
 class QNet(nn.Module):
     def __init__(self, lr, state_dims, action_dims, fc1_dims=256, fc2_dims=256, 
-                 name='Q-Critic2.pth', save_dir='data/cartpole/models'):
+                 name='sac-pendulum-q.pth', save_dir='data\pendulum\models'):
         super(QNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims
@@ -93,7 +93,7 @@ class QNet(nn.Module):
         self.load_state_dict(torch.load(self.save_path))
 
 class ValueNet(nn.Module):
-    def __init__(self, lr, state_dims, fc1_dims=256, fc2_dims=256, name='Value-Net2.pth', save_dir='data/cartpole/models'):
+    def __init__(self, lr, state_dims, fc1_dims=256, fc2_dims=256, name='sac-pendulum-v.pth', save_dir='data\pendulum\models'):
         super(ValueNet, self).__init__()
         self.lr = lr
         self.state_dims = state_dims

@@ -11,13 +11,13 @@ import matplotlib.pyplot as plt
 
 environment = gym.make('Pendulum-v1', render_mode='human')
 print(environment.action_space.high[0])
-model = 'lac'
+model = 'sac'
 
 if model == 'lac':
     agent = LAC(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high)
     agent.load()
 else:
-    agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
+    agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high)
     agent.load()
 
 state, info = environment.reset(seed=42)

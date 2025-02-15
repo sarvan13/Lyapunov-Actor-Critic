@@ -7,13 +7,13 @@ from sac.agent import SACAgent
 from tqdm import tqdm
 import numpy as np
 
-environment = gym.make('CustomInvertedPendulum-v0')
-print(environment.action_space.high[0])
-agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high[0])
+environment = gym.make('Pendulum-v1')
+print(environment.action_space.high)
+agent = SACAgent(environment.observation_space.shape[0], environment.action_space.shape[0], environment.action_space.high)
 
 state, info = environment.reset(seed=42)
-max_num_episodes = 1000
-max_episode_length = 250
+max_num_episodes = 5000
+max_episode_length = 200
 cost_arr = []
 step_arr = []
 steps_per_episode = []
@@ -27,7 +27,7 @@ for _ in tqdm(range(max_num_episodes)):
         action = agent.choose_action(state, reparameterize=False)
         next_state, cost, terminated, truncated, _ = environment.step(action)
 
-        agent.remember((state, action, -cost, next_state, terminated))
+        agent.remember((state, action, cost, next_state, terminated))
 
         state = next_state
 
@@ -50,7 +50,6 @@ for _ in tqdm(range(max_num_episodes)):
     cost_arr.append(episode_cost)
     step_arr.append(total_steps)
 
-np.save("data/cartpole/arrays/sac-cost2-arr.npy", np.array(cost_arr))
-np.save("data/cartpole/arrays/sac-step2-arr.npy", np.array(step_arr))
-print(f"Longest Episode: {longest_episode}")
-print(f"Average Steps per Episode: {np.mean(steps_per_episode)}")
+np.save("data\\pendulum\\arrays\\sac-pendulum-cost2-arr.npy", np.array(cost_arr))
+np.save("data\\pendulum\\arrays\\sac-pendulum-step2-arr.npy", np.array(step_arr))
+agent.save()
